@@ -184,7 +184,7 @@ export default function Chat() {
               {/* Add: Last seen */}
               {typeof user.lastSeen === "number" && (
                 <p className="text-[10px] text-muted-foreground">
-                  Last seen {formatLastSeen(user.lastSeen)}
+                  Last Seen & Last Time Active {formatLastSeen(user.lastSeen)}
                 </p>
               )}
             </div>
