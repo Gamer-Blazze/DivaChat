@@ -306,6 +306,22 @@ export default function Chat() {
                       <Coins className="h-4 w-4" />
                       <span className="text-xs ml-1">Attach Token</span>
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 px-2"
+                      onClick={() => {
+                        if (!user.walletAddress) {
+                          toast("No wallet connected");
+                          return;
+                        }
+                        setMessageText((prev) => `${prev}${prev ? " " : ""}${user.walletAddress}`);
+                        toast("Wallet address inserted");
+                      }}
+                    >
+                      <Wallet className="h-4 w-4" />
+                      <span className="text-xs ml-1">Insert Address</span>
+                    </Button>
                   </div>
                   <div className="flex items-center space-x-2">
                     <Input
