@@ -90,6 +90,41 @@ export default function Chat() {
     selectedConversation ? { conversationId: selectedConversation as any } : "skip"
   );
 
+  // Add: compute avatar for chat header (other participant for direct chat or conversation avatar for group)
+  const headerAvatar = (() => {
+    if (!activeConversation) return { src: undefined as string | undefined, initial: "U", alt: "Conversation" };
+
+    if (activeConversation.type === "group") {
+      const src = activeConversation.avatar as string | undefined;
+      return {
+        src,
+        initial: "G",
+        alt: activeConversation.name || "Group",
+      };
+    }
+
+    const other = (activeConversation.participants ?? [])
+      .filter((p): p is NonNullable<typeof p> => p != null)
+      .find((p) => p._id !== user?._id);
+
+    const src =
+      other?.image ||
+      `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
+        (other?.walletAddress as string | undefined) || (other?._id as string | undefined) || "unknown"
+      )}`;
+
+    const display =
+      other?.name ||
+      other?.ensName ||
+      (other?.walletAddress ? `${other.walletAddress.slice(0, 6)}...${other.walletAddress.slice(-4)}` : "User");
+
+    return {
+      src,
+      initial: (display?.charAt(0)?.toUpperCase() || "U") as string,
+      alt: display || "User",
+    };
+  })();
+
   if (isLoading || !isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -329,8 +364,10 @@ export default function Chat() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-10 w-10">
+                    {/* Replace placeholder with real user/group avatar (with identicon fallback) */}
+                    <AvatarImage src={headerAvatar.src} alt={headerAvatar.alt} />
                     <AvatarFallback>
-                      <Users className="h-5 w-5" />
+                      {headerAvatar.initial}
                     </AvatarFallback>
                   </Avatar>
                   <div>
