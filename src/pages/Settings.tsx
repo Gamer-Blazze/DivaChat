@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, Settings, User } from "lucide-react";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -38,6 +38,10 @@ export default function SettingsPage() {
           <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             Back
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/auth")} className="gap-2">
+            <User className="h-4 w-4" />
+            Profile
           </Button>
         </div>
 
