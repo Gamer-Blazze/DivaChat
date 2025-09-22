@@ -138,6 +138,31 @@ export const searchUsers = query({
 });
 
 /**
+ * Search users by display name (prefix match)
+ */
+export const searchUsersByName = query({
+  args: { query: v.string() },
+  handler: async (ctx, args) => {
+    const me = await getCurrentUser(ctx);
+    if (!me) {
+      throw new Error("Not authenticated");
+    }
+
+    const q = args.query.trim();
+    if (q === "") return [];
+
+    // Prefix range using index by_name
+    const upperBound = q + "\uffff";
+    const results = await ctx.db
+      .query("users")
+      .withIndex("by_name", (ix) => ix.gte("name", q).lt("name", upperBound))
+      .take(10);
+
+    return results;
+  },
+});
+
+/**
  * Internal helper to get current user
  */
 export function getCurrentUser(ctx: QueryCtx): Promise<Doc<"users"> | null>;

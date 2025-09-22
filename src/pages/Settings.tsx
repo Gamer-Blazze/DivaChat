@@ -5,11 +5,11 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { ArrowLeft, Settings, User } from "lucide-react";
+import { ArrowLeft, Settings, User, Search } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const { user } = useAuth();
   const [walletOpen, setWalletOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
+  const [userSearch, setUserSearch] = useState<string>("");
 
   // Initialize displayName when user loads
   useEffect(() => {
@@ -27,6 +28,9 @@ export default function SettingsPage() {
 
   // Add: mutation to update profile
   const updateProfile = useMutation(api.users.updateProfile);
+
+  // Add: live suggestions from backend (returns [] when empty query)
+  const nameSuggestions = useQuery(api.users.searchUsersByName, { query: userSearch });
 
   // Initialize theme from localStorage on mount
   useEffect(() => {
@@ -88,6 +92,61 @@ export default function SettingsPage() {
                 </div>
                 <Switch checked={darkMode} onCheckedChange={toggleDark} aria-label="Toggle dark mode" />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* User search by display name with suggestions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>User Search</CardTitle>
+              <CardDescription>Search by display name to find users with matching names</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search display name..."
+                  className="pl-9"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                />
+              </div>
+
+              {/* Suggestions list */}
+              {userSearch.trim() !== "" && (
+                <div className="rounded-md border divide-y">
+                  {(nameSuggestions ?? []).length === 0 ? (
+                    <div className="p-3 text-sm text-muted-foreground">No users found</div>
+                  ) : (
+                    (nameSuggestions ?? []).map((u) => (
+                      <div key={u._id} className="p-3 flex items-center justify-between">
+                        <div className="min-w-0">
+                          <div className="font-medium truncate">
+                            {u.name || "Unnamed"}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {u.walletAddress ? `${u.walletAddress.slice(0, 6)}...${u.walletAddress.slice(-4)}` : "No wallet"}
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={async () => {
+                            if (u.walletAddress) {
+                              await navigator.clipboard.writeText(u.walletAddress);
+                              toast("Wallet address copied");
+                            } else {
+                              toast("No wallet address to copy");
+                            }
+                          }}
+                        >
+                          Copy Address
+                        </Button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

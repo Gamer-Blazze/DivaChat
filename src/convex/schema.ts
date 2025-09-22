@@ -38,7 +38,8 @@ const schema = defineSchema(
     })
     .index("email", ["email"])
     .index("by_wallet", ["walletAddress"])
-    .index("by_ens", ["ensName"]),
+    .index("by_ens", ["ensName"])
+    .index("by_name", ["name"]),
 
     // Conversations (both direct and group chats)
     conversations: defineTable({
@@ -53,7 +54,8 @@ const schema = defineSchema(
       lastMessage: v.optional(v.string()),
     })
     .index("by_creator", ["createdBy"])
-    .index("by_last_message", ["lastMessageAt"]),
+    .index("by_last_message", ["lastMessageAt"])
+    .index("by_xmtpTopic", ["xmtpTopic"]),
 
     // Conversation participants
     participants: defineTable({
