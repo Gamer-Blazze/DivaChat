@@ -41,6 +41,9 @@ export default function Chat() {
   const [newChatWallet, setNewChatWallet] = useState("");
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+  // Add: message query limit
+  const MESSAGE_LIMIT = 100;
+
   // Add: small helper to format relative last seen time
   const formatLastSeen = (ts: number) => {
     const diff = Date.now() - ts;
@@ -89,7 +92,9 @@ export default function Chat() {
   // Add: live messages for selected conversation
   const messages = useQuery(
     api.messages.getMessages,
-    selectedConversation ? { conversationId: selectedConversation as any } : "skip"
+    selectedConversation
+      ? { conversationId: selectedConversation as any, limit: MESSAGE_LIMIT }
+      : "skip"
   );
 
   // Add: compute avatar for chat header (other participant for direct chat or conversation avatar for group)
