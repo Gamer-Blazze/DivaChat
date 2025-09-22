@@ -36,6 +36,8 @@ export default function Chat() {
   const [messageText, setMessageText] = useState("");
   const [publicText, setPublicText] = useState("");
   const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [newChatOpen, setNewChatOpen] = useState(false);
+  const [newChatWallet, setNewChatWallet] = useState("");
 
   // Redirect if not authenticated or wallet not connected
   useEffect(() => {
@@ -52,9 +54,22 @@ export default function Chat() {
     (c): c is NonNullable<typeof c> => c !== null
   );
 
-  // Add: mutations for public chat
+  // Add: mutations for public chat and general sending
   const getOrCreatePublic = useMutation(api.conversations.getOrCreatePublicConversation);
   const sendMessageMutation = useMutation(api.messages.sendMessage);
+  const createConversation = useMutation(api.conversations.createConversation);
+
+  // Add: lookup target user by wallet for new direct chat (skips when input empty)
+  const targetUser = useQuery(
+    api.users.getUserByWallet,
+    newChatWallet.trim() ? { walletAddress: newChatWallet.trim() } : "skip"
+  );
+
+  // Add: live messages for selected conversation
+  const messages = useQuery(
+    api.messages.getMessages,
+    selectedConversation ? { conversationId: selectedConversation as any } : "skip"
+  );
 
   if (isLoading || !isAuthenticated || !user) {
     return (
@@ -86,12 +101,21 @@ export default function Chat() {
     }
   };
 
-  const handleSendMessage = () => {
-    if (!messageText.trim() || !selectedConversation) return;
-    
-    // TODO: Implement message sending with XMTP encryption
-    console.log("Sending message:", messageText);
-    setMessageText("");
+  // Update: send in selected conversation via backend
+  const handleSendMessage = async () => {
+    const text = messageText.trim();
+    if (!text || !selectedConversation) return;
+
+    try {
+      await sendMessageMutation({
+        conversationId: selectedConversation as any,
+        type: "text",
+        encryptedContent: text,
+      });
+      setMessageText("");
+    } catch {
+      toast("Failed to send message");
+    }
   };
 
   return (
@@ -162,7 +186,12 @@ export default function Chat() {
           <div className="p-2">
             <div className="flex items-center justify-between px-2 py-2 mb-2">
               <span className="text-sm font-medium text-muted-foreground">Conversations</span>
-              <Button size="sm" variant="ghost" className="h-6 w-6 p-0">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0"
+                onClick={() => setNewChatOpen(true)}
+              >
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -299,46 +328,75 @@ export default function Chat() {
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
-                {/* Sample messages */}
-                <div className="flex items-start space-x-3">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>A</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-sm font-medium">Alice</span>
-                      <span className="text-xs text-muted-foreground">2:30 PM</span>
-                      <Badge variant="secondary" className="text-xs">
-                        <Shield className="h-2 w-2 mr-1" />
-                        Encrypted
-                      </Badge>
-                    </div>
-                    <div className="bg-muted rounded-2xl rounded-tl-md p-3 max-w-md">
-                      <p className="text-sm">Hey everyone! Just deployed my new DeFi contract 🚀</p>
-                    </div>
-                  </div>
-                </div>
+                {(messages ?? []).map((m) => {
+                  const isMe = m.sender?._id === user._id;
+                  const senderName =
+                    m.sender?.name ||
+                    m.sender?.ensName ||
+                    (m.sender?.walletAddress
+                      ? `${m.sender.walletAddress.slice(0, 6)}...${m.sender.walletAddress.slice(-4)}`
+                      : "Unknown");
+                  const time = new Date(m._creationTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  });
 
-                <div className="flex items-start space-x-3 justify-end">
-                  <div className="flex-1 flex justify-end">
-                    <div className="max-w-md">
-                      <div className="flex items-center justify-end space-x-2 mb-1">
-                        <Badge variant="secondary" className="text-xs">
-                          <Coins className="h-2 w-2 mr-1" />
-                          0.1 ETH
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">2:32 PM</span>
-                        <span className="text-sm font-medium">You</span>
+                  return (
+                    <div
+                      key={m._id}
+                      className={`flex items-start space-x-3 ${isMe ? "justify-end" : ""}`}
+                    >
+                      {!isMe && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {senderName?.charAt(0)?.toUpperCase() || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
+                      <div className={`flex-1 ${isMe ? "flex justify-end" : ""}`}>
+                        <div className="max-w-md">
+                          <div
+                            className={`flex items-center ${isMe ? "justify-end space-x-2" : "space-x-2"} mb-1`}
+                          >
+                            {!isMe && <span className="text-sm font-medium">{senderName}</span>}
+                            <span className="text-xs text-muted-foreground">{time}</span>
+                            {isMe && <span className="text-sm font-medium">You</span>}
+                          </div>
+                          <div
+                            className={`${
+                              isMe
+                                ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-md"
+                                : "bg-muted rounded-2xl rounded-tl-md"
+                            } p-3`}
+                          >
+                            <p className="text-sm">
+                              {m.type === "text"
+                                ? m.encryptedContent
+                                : m.type === "image"
+                                  ? "Sent an image"
+                                  : m.type === "audio"
+                                    ? "Sent an audio message"
+                                    : m.type === "file"
+                                      ? "Sent a file"
+                                      : m.type === "payment"
+                                        ? "Sent a payment"
+                                        : "Message"}
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-md p-3">
-                        <p className="text-sm">Congrats! Here's a little celebration bonus 🎉</p>
-                      </div>
+                      {isMe && (
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>
+                            {user.name?.charAt(0) ||
+                              user.walletAddress?.slice(2, 4).toUpperCase() ||
+                              "Y"}
+                          </AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
-                  </div>
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback>Y</AvatarFallback>
-                  </Avatar>
-                </div>
+                  );
+                })}
               </div>
             </ScrollArea>
 
@@ -408,6 +466,67 @@ export default function Chat() {
           </div>
         )}
       </div>
+
+      {/* New Direct Chat Dialog */}
+      <Dialog open={newChatOpen} onOpenChange={setNewChatOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Start a New Chat</DialogTitle>
+            <DialogDescription>Enter a wallet address to start a direct chat.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <Input
+              placeholder="0x... wallet address"
+              value={newChatWallet}
+              onChange={(e) => setNewChatWallet(e.target.value)}
+            />
+            {newChatWallet.trim() !== "" && (
+              <div className="rounded-md border p-3 text-sm">
+                {targetUser === undefined ? (
+                  <span className="text-muted-foreground">Searching...</span>
+                ) : targetUser === null ? (
+                  <span className="text-red-500">No user found for that address</span>
+                ) : (
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">
+                        {targetUser.name || targetUser.ensName || "Unnamed"}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {targetUser.walletAddress
+                          ? `${targetUser.walletAddress.slice(0, 6)}...${targetUser.walletAddress.slice(-4)}`
+                          : "No wallet"}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        if (!targetUser?._id) return;
+                        try {
+                          const id = await createConversation({
+                            type: "direct",
+                            participantIds: [targetUser._id],
+                          });
+                          toast("Chat created");
+                          setSelectedConversation(id as any);
+                          setNewChatOpen(false);
+                          setNewChatWallet("");
+                        } catch {
+                          toast("Failed to create chat");
+                        }
+                      }}
+                    >
+                      Create Chat
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Wallet Modal */}
       <Dialog open={walletModalOpen} onOpenChange={setWalletModalOpen}>
