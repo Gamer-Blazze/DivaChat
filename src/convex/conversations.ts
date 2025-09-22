@@ -225,3 +225,64 @@ export const markAsRead = mutation({
     });
   },
 });
+
+/**
+ * Get or create a singleton public conversation and ensure current user is a participant
+ */
+export const getOrCreatePublicConversation = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    // Find existing public conversation by a stable topic
+    const existing = await ctx.db
+      .query("conversations")
+      .withIndex("by_xmtpTopic", (q) => q.eq("xmtpTopic", "public_global"))
+      .unique();
+
+    let conversationId = existing?._id;
+
+    // Create if missing
+    if (!conversationId) {
+      conversationId = await ctx.db.insert("conversations", {
+        type: "group",
+        name: "Public",
+        description: "Global public chat",
+        createdBy: user._id,
+        isEncrypted: true,
+        xmtpTopic: "public_global",
+        lastMessageAt: Date.now(),
+      });
+
+      // Add creator as admin
+      await ctx.db.insert("participants", {
+        conversationId,
+        userId: user._id,
+        role: "admin",
+        joinedAt: Date.now(),
+      });
+    }
+
+    // Ensure current user is a participant
+    const participation = await ctx.db
+      .query("participants")
+      .withIndex("by_conversation_and_user", (q) =>
+        q.eq("conversationId", conversationId!).eq("userId", user._id),
+      )
+      .unique();
+
+    if (!participation) {
+      await ctx.db.insert("participants", {
+        conversationId: conversationId!,
+        userId: user._id,
+        role: "member",
+        joinedAt: Date.now(),
+      });
+    }
+
+    return conversationId!;
+  },
+});

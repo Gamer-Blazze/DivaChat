@@ -24,7 +24,7 @@ import {
   Phone,
   Video
 } from "lucide-react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [publicText, setPublicText] = useState("");
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   // Redirect if not authenticated or wallet not connected
@@ -51,6 +52,10 @@ export default function Chat() {
     (c): c is NonNullable<typeof c> => c !== null
   );
 
+  // Add: mutations for public chat
+  const getOrCreatePublic = useMutation(api.conversations.getOrCreatePublicConversation);
+  const sendMessageMutation = useMutation(api.messages.sendMessage);
+
   if (isLoading || !isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -61,6 +66,25 @@ export default function Chat() {
       </div>
     );
   }
+
+  // Add: handler for sending public chat message
+  const handleSendPublic = async () => {
+    const text = publicText.trim();
+    if (!text) return;
+    try {
+      const publicConversationId = await getOrCreatePublic({});
+      await sendMessageMutation({
+        conversationId: publicConversationId,
+        type: "text",
+        encryptedContent: text,
+      });
+      setPublicText("");
+      setSelectedConversation(publicConversationId);
+      toast("Sent to Public chat");
+    } catch {
+      toast("Failed to send to Public chat");
+    }
+  };
 
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedConversation) return;
@@ -213,6 +237,30 @@ export default function Chat() {
             )}
           </div>
         </ScrollArea>
+
+        {/* Public Chat Bar - fixed at bottom of sidebar */}
+        <div className="p-3 border-t border-border">
+          <div className="text-xs font-medium text-muted-foreground mb-2">Public Chat</div>
+          <div className="flex items-center gap-2">
+            <Input
+              placeholder="Message everyone..."
+              value={publicText}
+              onChange={(e) => setPublicText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSendPublic();
+              }}
+              className="h-8"
+            />
+            <Button
+              size="sm"
+              className="h-8 px-3"
+              disabled={!publicText.trim()}
+              onClick={handleSendPublic}
+            >
+              <Send className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Main Chat Area */}
