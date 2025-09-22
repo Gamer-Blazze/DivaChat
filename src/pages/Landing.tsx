@@ -266,6 +266,87 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Private vs Public Chat Section */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
+              Choose how you want to chat
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Start an encrypted private conversation or jump into the global public chat.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full border-border/50 hover:border-primary/20 transition-colors">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                    <Lock className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-tight">Private Chat</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    One-on-one or group chats with end-to-end encryption. Your wallet is your
+                    identity—no emails, no passwords.
+                  </p>
+                  <div>
+                    <Button
+                      size="lg"
+                      onClick={() => navigate(isAuthenticated ? "/chat" : "/auth")}
+                      className="px-6"
+                    >
+                      {isAuthenticated ? "Open Private Chat" : "Connect to Start"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              <Card className="h-full border-border/50 hover:border-primary/20 transition-colors">
+                <CardContent className="p-8 space-y-4">
+                  <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                    <Globe className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold tracking-tight">Public Chat</h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Join the global conversation. A public room is available from the chat sidebar,
+                    so you can message everyone instantly.
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={() => navigate(isAuthenticated ? "/chat" : "/auth")}
+                      className="px-6"
+                    >
+                      {isAuthenticated ? "Open Public Chat" : "Connect to Join"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* Benefits Section */}
       <section className="py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
