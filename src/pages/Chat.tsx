@@ -135,6 +135,12 @@ export default function Chat() {
           .find((p) => p._id !== user?._id) ?? null)
       : null;
 
+  // Add: move auto-scroll effect above any early returns so hooks are unconditional
+  useEffect(() => {
+    if (!messagesEndRef.current) return;
+    messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [selectedConversation, (messages ?? []).length]);
+
   if (isLoading || !isAuthenticated || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -181,13 +187,6 @@ export default function Chat() {
       toast("Failed to send message");
     }
   };
-
-  // Auto-scroll to bottom when conversation changes or new messages arrive
-  useEffect(() => {
-    if (!messagesEndRef.current) return;
-    // smooth scroll to the last message
-    messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [selectedConversation, (messages ?? []).length]);
 
   return (
     <motion.div
