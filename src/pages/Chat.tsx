@@ -36,12 +36,13 @@ export default function Chat() {
   const [messageText, setMessageText] = useState("");
   const [walletModalOpen, setWalletModalOpen] = useState(false);
 
-  // Redirect if not authenticated
+  // Redirect if not authenticated or wallet not connected
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    if (isLoading) return;
+    if (!isAuthenticated || !user?.walletAddress) {
       navigate("/auth");
     }
-  }, [isLoading, isAuthenticated, navigate]);
+  }, [isLoading, isAuthenticated, user?.walletAddress, navigate]);
 
   // Get user's conversations
   const conversations = useQuery(api.conversations.getUserConversations);
