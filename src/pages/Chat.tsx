@@ -26,12 +26,15 @@ import {
 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function Chat() {
   const { isLoading, isAuthenticated, user, signOut } = useAuth();
   const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messageText, setMessageText] = useState("");
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -89,7 +92,7 @@ export default function Chat() {
               <Button size="sm" variant="ghost" onClick={() => navigate("/settings")}>
                 <Settings className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="ghost" onClick={signOut}>
+              <Button size="sm" variant="ghost" onClick={() => setWalletModalOpen(true)}>
                 <Wallet className="h-4 w-4" />
               </Button>
             </div>
@@ -340,6 +343,93 @@ export default function Chat() {
           </div>
         )}
       </div>
+
+      {/* Wallet Modal */}
+      <Dialog open={walletModalOpen} onOpenChange={setWalletModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center">
+              <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-2">
+                <Wallet className="h-4 w-4 text-primary" />
+              </div>
+              Wallet
+            </DialogTitle>
+            <DialogDescription>
+              Manage your connected wallet for DivaChat.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3 p-3 rounded-lg border bg-muted/40">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={user.image} />
+                <AvatarFallback>
+                  {user.name?.charAt(0) || user.walletAddress?.slice(2, 4).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">
+                  {user.name || user.ensName || "Anonymous"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user.walletAddress
+                    ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}`
+                    : "No wallet connected"}
+                </p>
+              </div>
+              <Badge variant="secondary" className="text-xs">
+                <Shield className="h-3 w-3 mr-1" />
+                Encrypted
+              </Badge>
+            </div>
+
+            {user.walletAddress && (
+              <div className="flex items-center justify-between rounded-md border p-2">
+                <code className="text-xs break-all pr-2">
+                  {user.walletAddress}
+                </code>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(user.walletAddress!);
+                    toast("Wallet address copied");
+                  }}
+                >
+                  Copy
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setWalletModalOpen(false);
+                navigate("/auth");
+              }}
+            >
+              Manage / Connect Wallet
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await signOut();
+                  toast("Disconnected wallet");
+                  setWalletModalOpen(false);
+                  navigate("/auth");
+                } catch {
+                  toast("Failed to disconnect");
+                }
+              }}
+            >
+              Disconnect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
