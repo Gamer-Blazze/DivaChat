@@ -237,13 +237,13 @@ export const getOrCreatePublicConversation = mutation({
       throw new Error("Not authenticated");
     }
 
-    // Find existing public conversation by a stable topic
-    const existing = await ctx.db
+    // Find existing public conversation by a stable topic (take first if duplicates exist)
+    const existingList = await ctx.db
       .query("conversations")
       .withIndex("by_xmtpTopic", (q) => q.eq("xmtpTopic", "public_global"))
-      .unique();
+      .take(1);
 
-    let conversationId = existing?._id;
+    let conversationId = existingList[0]?._id;
 
     // Create if missing
     if (!conversationId) {

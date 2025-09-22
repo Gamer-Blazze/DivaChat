@@ -43,6 +43,14 @@ export const sendMessage = mutation({
       throw new Error("Not authorized to send messages in this conversation");
     }
 
+    // Require content for text messages
+    if (args.type === "text") {
+      const text = (args.encryptedContent ?? "").trim();
+      if (!text) {
+        throw new Error("Message content is required for text messages");
+      }
+    }
+
     // Create message
     const messageId = await ctx.db.insert("messages", {
       conversationId: args.conversationId,
@@ -59,10 +67,16 @@ export const sendMessage = mutation({
       status: "sent",
     });
 
+    // Compute last message preview safely
+    const textPreview =
+      args.type === "text"
+        ? (args.encryptedContent ?? "").slice(0, 60)
+        : `Sent ${args.type}`;
+
     // Update conversation last message
     await ctx.db.patch(args.conversationId, {
       lastMessageAt: Date.now(),
-      lastMessage: args.type === "text" ? "New message" : `Sent ${args.type}`,
+      lastMessage: textPreview,
     });
 
     return messageId;
@@ -96,7 +110,8 @@ export const getMessages = query({
       throw new Error("Not authorized to view messages in this conversation");
     }
 
-    const limit = args.limit || 50;
+    const rawLimit = args.limit ?? 50;
+    const limit = Math.min(200, Math.max(1, rawLimit));
     
     // Get messages with sender info
     const messages = await ctx.db
