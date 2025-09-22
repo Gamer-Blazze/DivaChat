@@ -247,13 +247,13 @@ export default function Chat() {
                       }`}
                       onClick={() => setSelectedConversation(conversation._id)}
                     >
-                      <CardContent className="p-3">
+                      <CardContent className="p-2">
                         <div className="flex items-center space-x-3">
-                          <Avatar className="h-10 w-10">
+                          <Avatar className="h-8 w-8">
                             <AvatarImage src={conversation.avatar} />
                             <AvatarFallback>
                               {conversation.type === "group" ? (
-                                <Users className="h-5 w-5" />
+                                <Users className="h-4 w-4" />
                               ) : (
                                 ((conversation.participants ?? [])
                                   .filter((p): p is NonNullable<typeof p> => p != null)[0]
@@ -263,7 +263,7 @@ export default function Chat() {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <p className="font-medium truncate">
+                              <p className="font-medium text-sm truncate">
                                 {conversation.name || 
                                  (
                                    (conversation.participants ?? [])
@@ -272,7 +272,7 @@ export default function Chat() {
                                  ) ||
                                  "Unknown"}
                               </p>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-[10px] text-muted-foreground">
                                 {conversation.lastMessageAt ? 
                                   new Date(conversation.lastMessageAt).toLocaleTimeString([], {
                                     hour: '2-digit',
@@ -281,7 +281,7 @@ export default function Chat() {
                                 }
                               </span>
                             </div>
-                            <p className="text-sm text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {conversation.lastMessage || "No messages yet"}
                             </p>
                           </div>
