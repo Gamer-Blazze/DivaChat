@@ -6,10 +6,27 @@ import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Settings, User } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const navigate = useNavigate();
   const [darkMode, setDarkMode] = useState(false);
+  const { user } = useAuth();
+  const [walletOpen, setWalletOpen] = useState(false);
+  const [displayName, setDisplayName] = useState<string>("");
+
+  // Initialize displayName when user loads
+  useEffect(() => {
+    setDisplayName(user?.name ?? "");
+  }, [user]);
+
+  // Add: mutation to update profile
+  const updateProfile = useMutation(api.users.updateProfile);
 
   // Initialize theme from localStorage on mount
   useEffect(() => {
@@ -39,7 +56,7 @@ export default function SettingsPage() {
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <Button variant="outline" onClick={() => navigate("/auth")} className="gap-2">
+          <Button variant="outline" onClick={() => setWalletOpen(true)} className="gap-2">
             <User className="h-4 w-4" />
             Profile
           </Button>
@@ -74,6 +91,81 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Wallet/Profile Dialog */}
+        <Dialog open={walletOpen} onOpenChange={setWalletOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Wallet & Profile</DialogTitle>
+              <DialogDescription>View your wallet address and edit your display name.</DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Wallet address */}
+              <div className="rounded-md border p-3">
+                <div className="text-sm text-muted-foreground mb-1">Wallet Address</div>
+                <div className="flex items-center justify-between gap-2">
+                  <code className="text-xs break-all pr-2">
+                    {user?.walletAddress ?? "No wallet connected"}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!user?.walletAddress}
+                    onClick={async () => {
+                      if (!user?.walletAddress) return;
+                      await navigator.clipboard.writeText(user.walletAddress);
+                      toast("Wallet address copied");
+                    }}
+                  >
+                    Copy
+                  </Button>
+                </div>
+              </div>
+
+              {/* Display name edit */}
+              <div className="rounded-md border p-3 space-y-2">
+                <div className="text-sm text-muted-foreground">Display Name</div>
+                <Input
+                  placeholder="Enter a display name"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+                <div className="flex justify-end">
+                  <Button
+                    onClick={async () => {
+                      try {
+                        await updateProfile({ name: displayName.trim() || undefined });
+                        toast("Profile updated");
+                        setWalletOpen(false);
+                      } catch {
+                        toast("Failed to update profile");
+                      }
+                    }}
+                  >
+                    Save
+                  </Button>
+                </div>
+              </div>
+
+              {/* Manage wallet button */}
+              <div className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setWalletOpen(false);
+                    navigate("/auth");
+                  }}
+                >
+                  Manage / Connect Wallet
+                </Button>
+                <Button onClick={() => setWalletOpen(false)} variant="ghost">
+                  Close
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </motion.div>
   );
