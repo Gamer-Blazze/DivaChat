@@ -78,6 +78,12 @@ export default function Chat() {
     newChatWallet.trim() ? { walletAddress: newChatWallet.trim() } : "skip"
   );
 
+  // Add: resolve the active conversation for header display name
+  const activeConversation =
+    selectedConversation
+      ? (conversationList.find(c => c._id === selectedConversation) ?? null)
+      : null;
+
   // Add: live messages for selected conversation
   const messages = useQuery(
     api.messages.getMessages,
@@ -325,7 +331,19 @@ export default function Chat() {
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">Group Chat</h3>
+                    <h3 className="font-semibold">
+                      {activeConversation
+                        ? (
+                            activeConversation.name ||
+                            (
+                              (activeConversation.participants ?? [])
+                                .filter((p): p is NonNullable<typeof p> => p != null)
+                                .find(p => p._id !== user._id)?.name
+                            ) ||
+                            "Unknown"
+                          )
+                        : "Conversation"}
+                    </h3>
                     <p className="text-sm text-muted-foreground">3 members • End-to-end encrypted</p>
                   </div>
                 </div>
