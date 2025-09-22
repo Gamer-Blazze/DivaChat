@@ -203,7 +203,7 @@ export default function Landing() {
               <Button
                 size="lg"
                 variant="outline"
-                onClick={() => window.open("https://github.com", "_blank")}
+                onClick={() => window.open("https://github.com/Gamer-Blazze/DivaChat", "_blank")}
                 className="px-8 py-4 text-lg"
               >
                 View on GitHub
