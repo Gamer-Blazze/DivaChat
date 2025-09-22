@@ -15,8 +15,7 @@ import {
   FileImage,
   ArrowRight,
   Wallet,
-  CheckCircle,
-  Settings
+  CheckCircle
 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -111,17 +110,6 @@ export default function Landing() {
             </motion.div>
             
             <div className="flex items-center space-x-2">
-              {/* Settings trigger */}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => setSettingsOpen(true)}
-                aria-label="Open settings"
-              >
-                <Settings className="h-5 w-5" />
-              </Button>
-
               {/* Primary CTA */}
               {!isLoading && (
                 <Button
