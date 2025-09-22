@@ -12,6 +12,7 @@ import Landing from "./pages/Landing.tsx";
 import Chat from "./pages/Chat.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import "./types/global.d.ts";
+import SettingsPage from "./pages/Settings.tsx";
 
 const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
@@ -49,6 +50,7 @@ createRoot(document.getElementById("root")!).render(
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<AuthPage redirectAfterAuth="/chat" />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
