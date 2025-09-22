@@ -15,12 +15,35 @@ import {
   FileImage,
   ArrowRight,
   Wallet,
-  CheckCircle
+  CheckCircle,
+  Settings
 } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { useEffect, useState } from "react";
 
 export default function Landing() {
   const { isLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Add settings modal and theme state
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Initialize theme from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("theme");
+    const isDark = saved ? saved === "dark" : window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    setDarkMode(isDark);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+
+  // Handler to toggle theme and persist
+  const toggleDark = (checked: boolean) => {
+    setDarkMode(checked);
+    document.documentElement.classList.toggle("dark", checked);
+    localStorage.setItem("theme", checked ? "dark" : "light");
+  };
 
   const features = [
     {
@@ -87,7 +110,19 @@ export default function Landing() {
               <span className="text-xl font-bold tracking-tight">DivaChat</span>
             </motion.div>
             
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              {/* Settings trigger */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9"
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Open settings"
+              >
+                <Settings className="h-5 w-5" />
+              </Button>
+
+              {/* Primary CTA */}
               {!isLoading && (
                 <Button
                   onClick={() => navigate(isAuthenticated ? "/chat" : "/auth")}
@@ -101,6 +136,30 @@ export default function Landing() {
           </div>
         </div>
       </nav>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Basic Settings</DialogTitle>
+            <DialogDescription>Customize your DivaChat experience.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <div>
+                <div className="font-medium">Dark Mode</div>
+                <div className="text-sm text-muted-foreground">Use a darker color theme</div>
+              </div>
+              <Switch
+                checked={darkMode}
+                onCheckedChange={toggleDark}
+                aria-label="Toggle dark mode"
+              />
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
