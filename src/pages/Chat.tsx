@@ -28,6 +28,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Chat() {
   const { isLoading, isAuthenticated, user, signOut } = useAuth();
@@ -124,6 +125,14 @@ export default function Chat() {
       alt: display || "User",
     };
   })();
+
+  // Add: resolve other participant for direct chats to support header chat options
+  const otherParticipant =
+    activeConversation?.type === "direct"
+      ? ((activeConversation.participants ?? [])
+          .filter((p): p is NonNullable<typeof p> => p != null)
+          .find((p) => p._id !== user?._id) ?? null)
+      : null;
 
   if (isLoading || !isAuthenticated || !user) {
     return (
@@ -395,9 +404,59 @@ export default function Chat() {
                   <Button size="sm" variant="ghost">
                     <Video className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
+                  {/* Replace plain button with dropdown menu for chat options */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button size="sm" variant="ghost">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuLabel>Chat Options</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (activeConversation?.type === "direct" && otherParticipant) {
+                            toast(`Viewing ${otherParticipant.name || otherParticipant.ensName || "Profile"}`);
+                          } else {
+                            toast("Group details coming soon");
+                          }
+                        }}
+                      >
+                        View Profile / Details
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          if (activeConversation?.type === "direct" && otherParticipant?.walletAddress) {
+                            await navigator.clipboard.writeText(otherParticipant.walletAddress);
+                            toast("Wallet address copied");
+                          } else {
+                            toast("No wallet address available");
+                          }
+                        }}
+                      >
+                        Copy Wallet Address
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setNewChatOpen(true)}>
+                        Start New Chat
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => {
+                          toast("Mute is not implemented yet");
+                        }}
+                      >
+                        Mute
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          toast("Delete conversation is not implemented yet");
+                        }}
+                      >
+                        Delete Conversation
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>
