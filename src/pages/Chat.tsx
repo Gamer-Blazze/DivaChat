@@ -39,6 +39,19 @@ export default function Chat() {
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatWallet, setNewChatWallet] = useState("");
 
+  // Add: small helper to format relative last seen time
+  const formatLastSeen = (ts: number) => {
+    const diff = Date.now() - ts;
+    const seconds = Math.floor(diff / 1000);
+    if (seconds < 60) return "just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return `${days}d ago`;
+  };
+
   // Redirect if not authenticated or wallet not connected
   useEffect(() => {
     if (isLoading) return;
@@ -162,6 +175,12 @@ export default function Chat() {
               <p className="text-xs text-muted-foreground truncate">
                 {user.walletAddress ? `${user.walletAddress.slice(0, 6)}...${user.walletAddress.slice(-4)}` : "No wallet"}
               </p>
+              {/* Add: Last seen */}
+              {typeof user.lastSeen === "number" && (
+                <p className="text-[10px] text-muted-foreground">
+                  Last seen {formatLastSeen(user.lastSeen)}
+                </p>
+              )}
             </div>
             <Badge variant="secondary" className="text-xs">
               <Shield className="h-3 w-3 mr-1" />
