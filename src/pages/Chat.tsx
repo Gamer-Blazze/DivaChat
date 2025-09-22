@@ -381,6 +381,19 @@ export default function Chat() {
                     minute: "2-digit",
                   });
 
+                  // Add: avatar image sources for sender and self, using identicon fallback
+                  const senderAvatarSrc =
+                    m.sender?.image ||
+                    `https://api.dicebear.com/7.x/identicon/svg?seed=${
+                      encodeURIComponent(m.sender?.walletAddress || m.sender?._id || "unknown")
+                    }`;
+
+                  const meAvatarSrc =
+                    user.image ||
+                    `https://api.dicebear.com/7.x/identicon/svg?seed=${
+                      encodeURIComponent(user.walletAddress || user._id)
+                    }`;
+
                   return (
                     <div
                       key={m._id}
@@ -388,6 +401,11 @@ export default function Chat() {
                     >
                       {!isMe && (
                         <Avatar className="h-8 w-8">
+                          {/* Add: Use AvatarImage with deterministic identicon fallback */}
+                          <AvatarImage
+                            src={senderAvatarSrc}
+                            alt={m.sender?.name || m.sender?.ensName || m.sender?.walletAddress || "User"}
+                          />
                           <AvatarFallback>
                             {senderName?.charAt(0)?.toUpperCase() || "U"}
                           </AvatarFallback>
@@ -427,6 +445,11 @@ export default function Chat() {
                       </div>
                       {isMe && (
                         <Avatar className="h-8 w-8">
+                          {/* Add: Self avatar image with identicon fallback */}
+                          <AvatarImage
+                            src={meAvatarSrc}
+                            alt={user.name || user.ensName || user.walletAddress || "You"}
+                          />
                           <AvatarFallback>
                             {user.name?.charAt(0) ||
                               user.walletAddress?.slice(2, 4).toUpperCase() ||
