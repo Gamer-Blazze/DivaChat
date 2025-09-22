@@ -356,11 +356,11 @@ export default function Chat() {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col overflow-hidden">
         {selectedConversation ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-border">
+            <div className="p-4 border-b border-border sticky top-0 z-10 bg-background/80 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Avatar className="h-10 w-10">
