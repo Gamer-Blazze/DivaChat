@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -39,6 +39,7 @@ export default function Chat() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [newChatOpen, setNewChatOpen] = useState(false);
   const [newChatWallet, setNewChatWallet] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   // Add: small helper to format relative last seen time
   const formatLastSeen = (ts: number) => {
@@ -180,6 +181,13 @@ export default function Chat() {
       toast("Failed to send message");
     }
   };
+
+  // Auto-scroll to bottom when conversation changes or new messages arrive
+  useEffect(() => {
+    if (!messagesEndRef.current) return;
+    // smooth scroll to the last message
+    messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [selectedConversation, (messages ?? []).length]);
 
   return (
     <motion.div
@@ -571,6 +579,7 @@ export default function Chat() {
                     </div>
                   );
                 })}
+                <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
 
