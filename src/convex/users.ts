@@ -23,10 +23,12 @@ export const currentUser = query({
 export const getUserByWallet = query({
   args: { walletAddress: v.string() },
   handler: async (ctx, args) => {
-    return await ctx.db
+    const results = await ctx.db
       .query("users")
       .withIndex("by_wallet", (q) => q.eq("walletAddress", args.walletAddress))
-      .unique();
+      .take(1);
+
+    return results[0] ?? null;
   },
 });
 
