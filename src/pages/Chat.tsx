@@ -169,7 +169,10 @@ export default function Chat() {
           {/* User info */}
           <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
             <Avatar className="h-10 w-10">
-              <AvatarImage src={user.image} />
+              <AvatarImage
+                src={user.image || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.walletAddress || user._id)}`}
+                alt={user.name || user.ensName || user.walletAddress || "User"}
+              />
               <AvatarFallback>
                 {user.name?.charAt(0) || user.walletAddress?.slice(2, 4).toUpperCase() || "U"}
               </AvatarFallback>
@@ -583,7 +586,10 @@ export default function Chat() {
           <div className="space-y-4">
             <div className="flex items-center space-x-3 p-3 rounded-lg border bg-muted/40">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={user.image} />
+                <AvatarImage
+                  src={user.image || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.walletAddress || user._id)}`}
+                  alt={user.name || user.ensName || user.walletAddress || "User"}
+                />
                 <AvatarFallback>
                   {user.name?.charAt(0) || user.walletAddress?.slice(2, 4).toUpperCase() || "U"}
                 </AvatarFallback>
