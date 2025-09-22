@@ -559,6 +559,18 @@ export default function Chat() {
                                         : "Message"}
                             </p>
                           </div>
+                          {/* Add: subtle per-message timestamp under the bubble */}
+                          <div className={`mt-1 ${isMe ? "text-right" : "text-left"}`}>
+                            <span className="text-[10px] text-muted-foreground">
+                              {new Date(m._creationTime).toLocaleString([], {
+                                year: "numeric",
+                                month: "short",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       {isMe && (
