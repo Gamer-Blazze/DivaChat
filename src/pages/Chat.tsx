@@ -22,7 +22,8 @@ import {
   Coins,
   MoreVertical,
   Phone,
-  Video
+  Video,
+  Globe
 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -279,6 +280,24 @@ export default function Chat() {
                 onClick={() => setNewChatOpen(true)}
               >
                 <Plus className="h-4 w-4" />
+              </Button>
+              {/* Add: Quick access to Public Chat */}
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-6 px-2 ml-1"
+                onClick={async () => {
+                  try {
+                    const id = await getOrCreatePublic({});
+                    setSelectedConversation(id as any);
+                    toast("Opened Public Chat");
+                  } catch {
+                    toast("Failed to open Public Chat");
+                  }
+                }}
+              >
+                <Globe className="h-3 w-3 mr-1" />
+                Public
               </Button>
             </div>
             
