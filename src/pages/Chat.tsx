@@ -286,7 +286,7 @@ export default function Chat() {
               <div className="text-center py-8">
                 <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground mb-2">No conversations yet</p>
-                <Button size="sm" variant="outline">
+                <Button size="sm" variant="outline" onClick={() => setNewChatOpen(true)}>
                   <Plus className="h-4 w-4 mr-2" />
                   Start Chat
                 </Button>
@@ -495,7 +495,7 @@ export default function Chat() {
               <p className="text-muted-foreground mb-6">
                 Select a conversation to start chatting securely with end-to-end encryption.
               </p>
-              <Button>
+              <Button onClick={() => setNewChatOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Start New Chat
               </Button>
