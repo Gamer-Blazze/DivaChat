@@ -229,7 +229,7 @@ export default function Chat() {
                 src={user.image || `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(user.walletAddress || user._id)}`}
                 alt={user.name || user.ensName || user.walletAddress || "User"}
               />
-              <AvatarFallback>
+              <AvatarFallback className="bg-gradient-to-br from-primary/20 to-muted text-foreground font-semibold">
                 {user.name?.charAt(0) || user.walletAddress?.slice(2, 4).toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
