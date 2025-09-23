@@ -29,6 +29,8 @@ import { api } from "@/convex/_generated/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ConversationCard } from "@/components/chat/ConversationCard";
+import { MessageItem } from "@/components/chat/MessageItem";
 
 export default function Chat() {
   const { isLoading, isAuthenticated, user, signOut } = useAuth();
@@ -297,82 +299,12 @@ export default function Chat() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Card 
-                      className={`cursor-pointer transition-colors hover:bg-muted/50 ${
-                        selectedConversation === conversation._id ? "bg-primary/10 border-primary/20" : ""
-                      }`}
-                      onClick={() => setSelectedConversation(conversation._id)}
-                    >
-                      <CardContent className="p-2">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-8 w-8">
-                            {/* Show group avatar or direct user's image/identicon */}
-                            {(() => {
-                              const other = (conversation.participants ?? [])
-                                .filter((p): p is NonNullable<typeof p> => p != null)
-                                .find((p) => p._id !== user._id);
-
-                              const imgSrc =
-                                conversation.type === "group"
-                                  ? (conversation.avatar as string | undefined)
-                                  : (other?.image ||
-                                    `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
-                                      (other?.walletAddress as string | undefined) ||
-                                        (other?._id as string | undefined) ||
-                                        "unknown"
-                                    )}`);
-
-                              const alt =
-                                conversation.type === "group"
-                                  ? (conversation.name || "Group")
-                                  : (other?.name ||
-                                    other?.ensName ||
-                                    other?.walletAddress ||
-                                    "User");
-
-                              return (
-                                <>
-                                  <AvatarImage src={imgSrc} alt={alt} />
-                                  <AvatarFallback className="text-[10px]">
-                                    {conversation.type === "group"
-                                      ? <Users className="h-4 w-4" />
-                                      : (
-                                        (other?.name?.charAt(0)?.toUpperCase()) ||
-                                        (other?.walletAddress?.slice(2, 3)?.toUpperCase()) ||
-                                        "U"
-                                      )}
-                                  </AvatarFallback>
-                                </>
-                              );
-                            })()}
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <p className="font-medium text-sm truncate">
-                                {conversation.name || 
-                                 (
-                                   (conversation.participants ?? [])
-                                     .filter((p): p is NonNullable<typeof p> => p != null)
-                                     .find(p => p._id !== user._id)?.name
-                                 ) ||
-                                 "Unknown"}
-                              </p>
-                              <span className="text-[10px] text-muted-foreground">
-                                {conversation.lastMessageAt ? 
-                                  new Date(conversation.lastMessageAt).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  }) : ""
-                                }
-                              </span>
-                            </div>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {conversation.lastMessage || "No messages yet"}
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                    <ConversationCard
+                      conversation={conversation as any}
+                      selected={selectedConversation === conversation._id}
+                      onSelect={(id) => setSelectedConversation(id)}
+                      currentUser={{ _id: user._id }}
+                    />
                   </motion.div>
                 ))}
               </div>
@@ -498,110 +430,9 @@ export default function Chat() {
             {/* Messages */}
             <ScrollArea className="flex-1 p-4">
               <div className="space-y-4">
-                {(messages ?? []).map((m) => {
-                  const isMe = m.sender?._id === user._id;
-                  const senderName =
-                    m.sender?.name ||
-                    m.sender?.ensName ||
-                    (m.sender?.walletAddress
-                      ? `${m.sender.walletAddress.slice(0, 6)}...${m.sender.walletAddress.slice(-4)}`
-                      : "Unknown");
-                  const time = new Date(m._creationTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  });
-
-                  // Add: avatar image sources for sender and self, using identicon fallback
-                  const senderAvatarSrc =
-                    m.sender?.image ||
-                    `https://api.dicebear.com/7.x/identicon/svg?seed=${
-                      encodeURIComponent(m.sender?.walletAddress || m.sender?._id || "unknown")
-                    }`;
-
-                  const meAvatarSrc =
-                    user.image ||
-                    `https://api.dicebear.com/7.x/identicon/svg?seed=${
-                      encodeURIComponent(user.walletAddress || user._id)
-                    }`;
-
-                  return (
-                    <div
-                      key={m._id}
-                      className={`flex items-start space-x-3 ${isMe ? "justify-end" : ""}`}
-                    >
-                      {!isMe && (
-                        <Avatar className="h-8 w-8">
-                          {/* Add: Use AvatarImage with deterministic identicon fallback */}
-                          <AvatarImage
-                            src={senderAvatarSrc}
-                            alt={m.sender?.name || m.sender?.ensName || m.sender?.walletAddress || "User"}
-                          />
-                          <AvatarFallback>
-                            {senderName?.charAt(0)?.toUpperCase() || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                      <div className={`flex-1 ${isMe ? "flex justify-end" : ""}`}>
-                        <div className="max-w-md">
-                          <div
-                            className={`flex items-center ${isMe ? "justify-end space-x-2" : "space-x-2"} mb-1`}
-                          >
-                            {!isMe && <span className="text-sm font-medium">{senderName}</span>}
-                            <span className="text-xs text-muted-foreground">{time}</span>
-                            {isMe && <span className="text-sm font-medium">You</span>}
-                          </div>
-                          <div
-                            className={`${
-                              isMe
-                                ? "bg-primary text-primary-foreground rounded-2xl rounded-tr-md"
-                                : "bg-muted rounded-2xl rounded-tl-md"
-                            } p-3`}
-                          >
-                            <p className="text-sm">
-                              {m.type === "text"
-                                ? m.encryptedContent
-                                : m.type === "image"
-                                  ? "Sent an image"
-                                  : m.type === "audio"
-                                    ? "Sent an audio message"
-                                    : m.type === "file"
-                                      ? "Sent a file"
-                                      : m.type === "payment"
-                                        ? "Sent a payment"
-                                        : "Message"}
-                            </p>
-                          </div>
-                          {/* Add: subtle per-message timestamp under the bubble */}
-                          <div className={`mt-1 ${isMe ? "text-right" : "text-left"}`}>
-                            <span className="text-[10px] text-muted-foreground">
-                              {new Date(m._creationTime).toLocaleString([], {
-                                year: "numeric",
-                                month: "short",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      {isMe && (
-                        <Avatar className="h-8 w-8">
-                          {/* Add: Self avatar image with identicon fallback */}
-                          <AvatarImage
-                            src={meAvatarSrc}
-                            alt={user.name || user.ensName || user.walletAddress || "You"}
-                          />
-                          <AvatarFallback>
-                            {user.name?.charAt(0) ||
-                              user.walletAddress?.slice(2, 4).toUpperCase() ||
-                              "Y"}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
-                  );
-                })}
+                {(messages ?? []).map((m) => (
+                  <MessageItem key={m._id} message={m as any} me={user as any} />
+                ))}
                 <div ref={messagesEndRef} />
               </div>
             </ScrollArea>
