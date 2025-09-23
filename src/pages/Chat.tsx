@@ -380,29 +380,7 @@ export default function Chat() {
           </div>
         </ScrollArea>
 
-        {/* Public Chat Bar - fixed at bottom of sidebar */}
-        <div className="p-3 border-t border-border">
-          <div className="text-xs font-medium text-muted-foreground mb-2">Public Chat</div>
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Message everyone..."
-              value={publicText}
-              onChange={(e) => setPublicText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSendPublic();
-              }}
-              className="h-8"
-            />
-            <Button
-              size="sm"
-              className="h-8 px-3"
-              disabled={!publicText.trim()}
-              onClick={handleSendPublic}
-            >
-              <Send className="h-3.5 w-3.5" />
-            </Button>
-          </div>
-        </div>
+        
       </div>
 
       {/* Main Chat Area */}
