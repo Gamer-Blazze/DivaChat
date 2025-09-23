@@ -80,8 +80,20 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
       navigate(redirect);
     } catch (e) {
       console.error("Wallet connect error:", e);
-      setError(e instanceof Error ? e.message : "Failed to connect wallet.");
-      toast("Failed to connect wallet.");
+      // Provide more actionable errors for common MetaMask scenarios
+      const code = (e as any)?.code;
+      let msg = "Failed to connect wallet.";
+      if (code === 4001) {
+        msg = "Connection request was rejected in MetaMask.";
+      } else if (code === -32002) {
+        msg = "A connection request is already pending in MetaMask. Open the MetaMask extension and complete it.";
+      } else if ((e as any)?.message?.toLowerCase?.().includes("no window.ethereum")) {
+        msg = "No wallet detected. Please install MetaMask or Trust Wallet.";
+      } else if ((e as any)?.message) {
+        msg = (e as any).message;
+      }
+      setError(msg);
+      toast(msg);
       setIsLoading(false);
     }
   };
