@@ -306,16 +306,45 @@ export default function Chat() {
                       <CardContent className="p-2">
                         <div className="flex items-center space-x-3">
                           <Avatar className="h-8 w-8">
-                            <AvatarImage src={conversation.avatar} />
-                            <AvatarFallback>
-                              {conversation.type === "group" ? (
-                                <Users className="h-4 w-4" />
-                              ) : (
-                                ((conversation.participants ?? [])
-                                  .filter((p): p is NonNullable<typeof p> => p != null)[0]
-                                  ?.name?.charAt(0)) ?? "U"
-                              )}
-                            </AvatarFallback>
+                            {/* Show group avatar or direct user's image/identicon */}
+                            {(() => {
+                              const other = (conversation.participants ?? [])
+                                .filter((p): p is NonNullable<typeof p> => p != null)
+                                .find((p) => p._id !== user._id);
+
+                              const imgSrc =
+                                conversation.type === "group"
+                                  ? (conversation.avatar as string | undefined)
+                                  : (other?.image ||
+                                    `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(
+                                      (other?.walletAddress as string | undefined) ||
+                                        (other?._id as string | undefined) ||
+                                        "unknown"
+                                    )}`);
+
+                              const alt =
+                                conversation.type === "group"
+                                  ? (conversation.name || "Group")
+                                  : (other?.name ||
+                                    other?.ensName ||
+                                    other?.walletAddress ||
+                                    "User");
+
+                              return (
+                                <>
+                                  <AvatarImage src={imgSrc} alt={alt} />
+                                  <AvatarFallback className="text-[10px]">
+                                    {conversation.type === "group"
+                                      ? <Users className="h-4 w-4" />
+                                      : (
+                                        (other?.name?.charAt(0)?.toUpperCase()) ||
+                                        (other?.walletAddress?.slice(2, 3)?.toUpperCase()) ||
+                                        "U"
+                                      )}
+                                  </AvatarFallback>
+                                </>
+                              );
+                            })()}
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
